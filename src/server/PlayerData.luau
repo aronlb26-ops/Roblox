@@ -1,4 +1,4 @@
--- Laddar, håller och sparar spelardata via DataStore.
+-- Loads, holds and saves player data through DataStore.
 
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,11 +9,11 @@ local PlayerData = {}
 
 local store = nil
 pcall(function()
-	store = DataStoreService:GetDataStore("TradgardsfeberV1")
+	store = DataStoreService:GetDataStore("GardenFeverV1")
 end)
 
 local profiles = {} -- [Player] = data
-local sessions = {} -- [Player] = { Equipped = string? } (sparas inte)
+local sessions = {} -- [Player] = { Equipped = string? } (not saved)
 local canSave = {} -- [Player] = boolean
 
 local function defaultData()
@@ -22,7 +22,7 @@ local function defaultData()
 		Seeds = table.clone(Config.StartingSeeds),
 		Gear = {},
 		Fruits = {},
-		Plants = {}, -- ["rutindex"] = { Seed, Start, Ready, Harvests, Mut }
+		Plants = {}, -- ["tileIndex"] = { Seed, Start, Ready, Harvests, Mut }
 		TotalEarned = 0,
 		Harvested = 0,
 	}
@@ -46,7 +46,7 @@ function PlayerData.Load(player: Player)
 				loaded = true
 				break
 			end
-			warn("[PlayerData] Kunde inte ladda", player.Name, result)
+			warn("[PlayerData] Failed to load", player.Name, result)
 			task.wait(1)
 		end
 	end
@@ -61,7 +61,7 @@ function PlayerData.Load(player: Player)
 		end
 	end
 
-	-- Ta bort saker som inte längre finns i konfigurationen.
+	-- Drop items that no longer exist in the config.
 	for id in data.Seeds do
 		if not Config.SeedById[id] then
 			data.Seeds[id] = nil
@@ -78,7 +78,7 @@ function PlayerData.Load(player: Player)
 		end
 	end
 
-	-- Spara bara om vi faktiskt kunde läsa befintlig data, så att ett DataStore-fel aldrig skriver över en sparfil.
+	-- Only save if existing data was actually read, so a DataStore outage never overwrites a save.
 	canSave[player] = store ~= nil and loaded
 	profiles[player] = data
 	sessions[player] = { Equipped = nil }
@@ -102,7 +102,7 @@ function PlayerData.Save(player: Player)
 		store:SetAsync(key(player), data, { player.UserId })
 	end)
 	if not ok then
-		warn("[PlayerData] Kunde inte spara", player.Name, err)
+		warn("[PlayerData] Failed to save", player.Name, err)
 	end
 end
 

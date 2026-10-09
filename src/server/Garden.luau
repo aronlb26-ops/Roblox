@@ -1,4 +1,4 @@
--- Trädgårdslogik: tilldelning av tomter, plantering, växande, mutationer och skörd.
+-- Garden logic: plot assignment, planting, growth, mutations and harvesting.
 
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -32,7 +32,7 @@ local function newPart(name: string, parent: Instance): Part
 	part.Name = name
 	part.Anchored = true
 	part.CanCollide = false
-	part.CanQuery = true -- behövs för att ClickDetector ska träffa plantan
+	part.CanQuery = true -- needed so the ClickDetector hits the plant
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
 	part.Material = Enum.Material.SmoothPlastic
@@ -70,7 +70,7 @@ local function updateVisual(tile, record, t: number)
 
 	local stem = visual.Stem
 	local height = 0.4 + seed.Height * stemP
-	stem.Size = Vector3.new(height, 0.35, 0.35) -- cylinderns axel är X
+	stem.Size = Vector3.new(height, 0.35, 0.35) -- the cylinder's axis is X
 	stem.CFrame = CFrame.new(base + Vector3.new(0, height / 2, 0)) * CFrame.Angles(0, 0, math.rad(90))
 
 	local leafSize = 0.3 + 1.4 * stemP
@@ -108,7 +108,7 @@ local function updateVisual(tile, record, t: number)
 	gui.Title.Text = title
 	gui.Title.TextColor3 = if mutation then mutation.Color else Color3.new(1, 1, 1)
 	if ready then
-		gui.Status.Text = "✅ Redo att skörda!"
+		gui.Status.Text = "✅ Ready to harvest!"
 		gui.Status.TextColor3 = Color3.fromRGB(140, 255, 120)
 	else
 		gui.Status.Text = "⏳ " .. Config.FormatTime(record.Ready - t)
@@ -197,7 +197,7 @@ end
 local function harvest(player: Player, data, tile, key: string, record)
 	local seed = Config.SeedById[record.Seed]
 	if #data.Fruits >= Config.MaxFruits then
-		Net.Notify(player, "🎒 Ryggsäcken är full! Sälj dina frukter först.", "bad")
+		Net.Notify(player, "🎒 Your backpack is full! Sell your fruit first.", "bad")
 		return
 	end
 
@@ -214,7 +214,7 @@ local function harvest(player: Player, data, tile, key: string, record)
 	local mutation = fruit.M and Config.Mutations[fruit.M]
 	local text = string.format("+1 %s %s%s (💰 %s)", seed.Emoji, if mutation then mutation.Name .. " " else "", seed.Name, Config.FormatNumber(value))
 	if huge then
-		Net.Notify(player, "🦣 ENORM SKÖRD! " .. text, "epic")
+		Net.Notify(player, "🦣 HUGE HARVEST! " .. text, "epic")
 	else
 		Net.Notify(player, text, if mutation then "epic" else "good")
 	end
@@ -235,7 +235,7 @@ end
 
 local function onTileClicked(player: Player, plot, index: number)
 	if plot.Owner ~= player then
-		Net.Notify(player, "🚫 Det här är inte din trädgård!", "bad")
+		Net.Notify(player, "🚫 This is not your garden!", "bad")
 		return
 	end
 	local data = PlayerData.Get(player)
@@ -254,20 +254,20 @@ local function onTileClicked(player: Player, plot, index: number)
 		if session.Equipped == "Shovel" then
 			data.Plants[key] = nil
 			clearVisual(tile)
-			Net.Notify(player, "🪏 Grävde upp " .. seed.Name, "info")
+			Net.Notify(player, "🪏 Dug up " .. seed.Name, "info")
 			return
 		end
 
 		local gearId = equippedId(player, "Gear:")
 		if gearId == "GoldFertilizer" and (data.Gear.GoldFertilizer or 0) > 0 then
 			if Config.MutationMult(record.Mut) >= Config.Mutations.Gold.Mult then
-				Net.Notify(player, "Plantan är redan minst lika värdefull som Guld!", "bad")
+				Net.Notify(player, "This plant is already worth at least as much as Gold!", "bad")
 				return
 			end
 			data.Gear.GoldFertilizer -= 1
 			record.Mut = "Gold"
 			updateVisual(tile, record, t)
-			Net.Notify(player, "✨ " .. seed.Name .. " blev GULD!", "epic")
+			Net.Notify(player, "✨ " .. seed.Name .. " turned GOLD!", "epic")
 			unequipIfEmpty(player, data)
 			Net.PushState(player)
 			return
@@ -283,24 +283,24 @@ local function onTileClicked(player: Player, plot, index: number)
 			local skip = math.max(1, math.floor(seed.GrowTime * Config.WateringCanBoost))
 			record.Ready = math.max(t, record.Ready - skip)
 			updateVisual(tile, record, t)
-			Net.Notify(player, "💧 Vattnade " .. seed.Name .. " (-" .. Config.FormatTime(skip) .. ")", "good")
+			Net.Notify(player, "💧 Watered " .. seed.Name .. " (-" .. Config.FormatTime(skip) .. ")", "good")
 			unequipIfEmpty(player, data)
 			Net.PushState(player)
 			return
 		end
 
-		Net.Notify(player, string.format("⏳ %s är redo om %s", seed.Name, Config.FormatTime(record.Ready - t)), "info")
+		Net.Notify(player, string.format("⏳ %s will be ready in %s", seed.Name, Config.FormatTime(record.Ready - t)), "info")
 		return
 	end
 
 	local seedId = equippedId(player, "Seed:")
 	if not seedId then
-		Net.Notify(player, "🌱 Välj ett frö i verktygsfältet för att plantera!", "info")
+		Net.Notify(player, "🌱 Pick a seed in the hotbar to plant!", "info")
 		return
 	end
 	local seed = Config.SeedById[seedId]
 	if not seed or (data.Seeds[seedId] or 0) <= 0 then
-		Net.Notify(player, "Du har inga sådana frön kvar.", "bad")
+		Net.Notify(player, "You have no more of those seeds.", "bad")
 		return
 	end
 
@@ -325,7 +325,7 @@ function Garden.Init(worldPlots)
 		end
 	end
 
-	-- Uppdatera tillväxt och nedräkningar en gång per sekund.
+	-- Update growth and countdowns once per second.
 	task.spawn(function()
 		while true do
 			task.wait(1)
@@ -351,7 +351,7 @@ function Garden.Assign(player: Player)
 		if not plot.Owner then
 			plot.Owner = player
 			plotOf[player] = plot
-			plot.Sign.Text.Text = player.DisplayName .. "s trädgård"
+			plot.Sign.Text.Text = player.DisplayName .. "'s Garden"
 			renderPlot(plot, player)
 			return plot
 		end
@@ -376,7 +376,7 @@ function Garden.PlotOf(player: Player)
 	return plotOf[player]
 end
 
--- Anropas av vädret: varje planta får en chans att få en (bättre) mutation.
+-- Called by the weather: every plant gets a chance at a (better) mutation.
 function Garden.WeatherTick(weather)
 	local t = now()
 	for _, plot in plots do
@@ -391,7 +391,7 @@ function Garden.WeatherTick(weather)
 							record.Mut = mutationId
 							updateVisual(tile, record, t)
 							local seed = Config.SeedById[record.Seed]
-							Net.Notify(owner, string.format("%s Din %s blev %s!", weather.Emoji, seed.Name, Config.Mutations[mutationId].Name), "epic")
+							Net.Notify(owner, string.format("%s Your %s became %s!", weather.Emoji, seed.Name, Config.Mutations[mutationId].Name), "epic")
 						end
 					end
 				end

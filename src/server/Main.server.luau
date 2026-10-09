@@ -1,4 +1,4 @@
--- Startpunkt på servern: bygger världen och kopplar ihop alla system.
+-- Server entry point: builds the world and wires up every system.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -60,10 +60,10 @@ local function onPlayerAdded(player: Player)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	local coins = Instance.new("IntValue")
-	coins.Name = "Mynt"
+	coins.Name = "Coins"
 	coins.Parent = leaderstats
 	local harvested = Instance.new("IntValue")
-	harvested.Name = "Skördat"
+	harvested.Name = "Harvested"
 	harvested.Parent = leaderstats
 	leaderstats.Parent = player
 
@@ -75,7 +75,7 @@ local function onPlayerAdded(player: Player)
 
 	local plot = Garden.Assign(player)
 	if not plot then
-		player:Kick("Servern är full – alla trädgårdar är upptagna. Försök igen!")
+		player:Kick("This server is full - every garden is taken. Please try again!")
 		return
 	end
 
@@ -92,7 +92,7 @@ local function onPlayerAdded(player: Player)
 	Shop.AddPlayer(player)
 	Net.PushState(player)
 	Weather.SendCurrent(player)
-	Net.Notify(player, "🌱 Välkommen till " .. Config.GameName .. "! Plantera dina frön och bli rik!", "good")
+	Net.Notify(player, "🌱 Welcome to " .. Config.GameName .. "! Plant your seeds and get rich!", "good")
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
@@ -106,7 +106,7 @@ Players.PlayerRemoving:Connect(function(player)
 	PlayerData.Release(player)
 end)
 
--- Autospara
+-- Autosave
 task.spawn(function()
 	while true do
 		task.wait(Config.AutoSaveInterval)

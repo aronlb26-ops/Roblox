@@ -1,4 +1,4 @@
--- Fröbutik och redskapsbutik med personligt lager som fylls på med jämna mellanrum.
+-- Seed shop and gear shop with per-player stock that restocks on a timer.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -44,7 +44,7 @@ local function announceRare(player: Player)
 	for _, seed in Config.Seeds do
 		local order = Config.Rarities[seed.Rarity].Order
 		if order >= Config.Rarities.Legendary.Order and (stock.Seeds[seed.Id] or 0) > 0 then
-			Net.Notify(player, string.format("%s %s %s finns i Fröbutiken!", seed.Emoji, Config.Rarities[seed.Rarity].Name, seed.Name), "epic")
+			Net.Notify(player, string.format("%s %s %s is in the Seed Shop!", seed.Emoji, Config.Rarities[seed.Rarity].Name, seed.Name), "epic")
 		end
 	end
 end
@@ -76,18 +76,18 @@ local function buy(player: Player, kind: any, id: any)
 	end
 
 	if (stockTable[id] or 0) <= 0 then
-		Net.Notify(player, "❌ Slut i lager!", "bad")
+		Net.Notify(player, "❌ Out of stock!", "bad")
 		return false
 	end
 	if data.Coins < item.Price then
-		Net.Notify(player, "❌ Du har inte råd! Behöver 💰 " .. Config.FormatNumber(item.Price), "bad")
+		Net.Notify(player, "❌ Not enough coins! You need 💰 " .. Config.FormatNumber(item.Price), "bad")
 		return false
 	end
 
 	data.Coins -= item.Price
 	stockTable[id] -= 1
 	inventory[id] = (inventory[id] or 0) + 1
-	Net.Notify(player, string.format("🛒 Köpte %s %s", item.Emoji, item.Name), "good")
+	Net.Notify(player, string.format("🛒 Bought %s %s", item.Emoji, item.Name), "good")
 	Net.PushState(player)
 	Net.Shop:FireClient(player, snapshot(player))
 	return true
@@ -107,7 +107,7 @@ function Shop.Init()
 				for _, player in Players:GetPlayers() do
 					if stocks[player] then
 						restock(player)
-						Net.Notify(player, "🚚 Butikerna har fyllts på!", "good")
+						Net.Notify(player, "🚚 The shops have restocked!", "good")
 						announceRare(player)
 					end
 				end
@@ -126,14 +126,14 @@ function Shop.RemovePlayer(player: Player)
 	lastBuy[player] = nil
 end
 
--- Säljer allt i ryggsäcken. Anropas från sälj-ståndets ProximityPrompt.
+-- Sells everything in the backpack. Called from the sell stall's ProximityPrompt.
 function Shop.SellAll(player: Player)
 	local data = PlayerData.Get(player)
 	if not data then
 		return
 	end
 	if #data.Fruits == 0 then
-		Net.Notify(player, "🎒 Du har inga frukter att sälja. Skörda din trädgård!", "bad")
+		Net.Notify(player, "🎒 You have no fruit to sell. Harvest your garden!", "bad")
 		return
 	end
 	local total = 0
@@ -144,7 +144,7 @@ function Shop.SellAll(player: Player)
 	data.Fruits = {}
 	data.Coins += total
 	data.TotalEarned += total
-	Net.Notify(player, string.format("💰 Sålde %d frukter för %s mynt!", count, Config.FormatNumber(total)), "good")
+	Net.Notify(player, string.format("💰 Sold %d fruits for %s coins!", count, Config.FormatNumber(total)), "good")
 	Net.PushState(player)
 end
 

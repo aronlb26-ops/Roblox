@@ -1,4 +1,4 @@
--- Slumpmässiga väderhändelser som ändrar ljuset och ger plantor chans till mutationer.
+-- Random weather events that change the lighting and give plants a chance to mutate.
 
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -57,7 +57,7 @@ function Weather.Init()
 			endsAt = os.clock() + weather.Duration
 			applyLook(weather.Id)
 			Net.Weather:FireAllClients(weather.Id, weather.Duration)
-			Net.NotifyAll(string.format("%s %s har börjat!", weather.Emoji, weather.Name), "epic")
+			Net.NotifyAll(string.format("%s %s has started!", weather.Emoji, weather.Name), "epic")
 
 			while os.clock() < endsAt do
 				task.wait(Config.WeatherTick)
@@ -71,7 +71,7 @@ function Weather.Init()
 	end)
 end
 
--- Skicka pågående väder till en spelare som precis anslöt.
+-- Send the ongoing weather to a player who just joined.
 function Weather.SendCurrent(player: Player)
 	if current then
 		Net.Weather:FireClient(player, current.Id, math.max(0, endsAt - os.clock()))

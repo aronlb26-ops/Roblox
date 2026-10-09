@@ -1,4 +1,4 @@
--- Skapar RemoteEvents/RemoteFunctions och skickar spelarens tillstånd till klienten.
+-- Creates RemoteEvents/RemoteFunctions and sends the player's state to the client.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -26,7 +26,7 @@ end
 
 folder.Parent = ReplicatedStorage
 
--- Net.Notify är en funktion; själva RemoteEvent:en nås via notifyRemote.
+-- Net.Notify is a function; the RemoteEvent itself is reached through notifyRemote.
 local notifyRemote = Net.Notify
 Net.Notify = nil
 
@@ -46,7 +46,7 @@ function Net.PushState(player: Player)
 		return
 	end
 
-	-- Gruppera frukter per sort + mutation för ryggsäcken.
+	-- Group fruits by type + mutation for the backpack.
 	local groups = {}
 	local order = {}
 	local totalValue = 0
@@ -81,11 +81,11 @@ function Net.PushState(player: Player)
 
 	local leaderstats = player:FindFirstChild("leaderstats")
 	if leaderstats then
-		local coins = leaderstats:FindFirstChild("Mynt")
+		local coins = leaderstats:FindFirstChild("Coins")
 		if coins then
 			coins.Value = data.Coins
 		end
-		local harvested = leaderstats:FindFirstChild("Skördat")
+		local harvested = leaderstats:FindFirstChild("Harvested")
 		if harvested then
 			harvested.Value = data.Harvested
 		end

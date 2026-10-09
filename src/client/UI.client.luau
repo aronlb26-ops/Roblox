@@ -1,4 +1,4 @@
--- Hela klientgränssnittet: mynt, verktygsfält, butiker, ryggsäck, notiser och vädereffekter.
+-- The whole client UI: coins, hotbar, shops, backpack, notifications and weather effects.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -34,10 +34,10 @@ local restockAt = os.clock() + Config.RestockInterval
 local openShopKind = nil
 local openShopPrompt = nil
 local hotbarKeys = {}
-local toggleBackpack -- definieras längre ner
+local toggleBackpack -- defined further down
 
 --------------------------------------------------------------------------------
--- Hjälpfunktioner
+-- Helpers
 --------------------------------------------------------------------------------
 
 local function make(className: string, props, children)
@@ -111,12 +111,12 @@ local function pop(gui: GuiObject)
 end
 
 --------------------------------------------------------------------------------
--- Grundlayout
+-- Base layout
 --------------------------------------------------------------------------------
 
 local screen = make("ScreenGui", { Name = "TradgardsUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = playerGui })
 
--- Mynt
+-- Coins
 local coinPill = make("Frame", {
 	Name = "Coins",
 	AnchorPoint = Vector2.new(0.5, 0),
@@ -128,7 +128,7 @@ local coinPill = make("Frame", {
 local coinLabel = text({ Size = UDim2.fromScale(1, 1), Text = "💰 0", Parent = coinPill })
 make("UIPadding", { PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = coinPill })
 
--- Väderbanner
+-- Weather banner
 local weatherBanner = make("Frame", {
 	Name = "Weather",
 	AnchorPoint = Vector2.new(0.5, 0),
@@ -143,7 +143,7 @@ make("UIPadding", { PaddingTop = UDim.new(0, 5), PaddingBottom = UDim.new(0, 5),
 local weatherEndsAt = 0
 local weatherName = ""
 
--- Vänstermeny
+-- Left menu
 local nav = make("Frame", {
 	Name = "Nav",
 	AnchorPoint = Vector2.new(0, 0.5),
@@ -154,10 +154,10 @@ local nav = make("Frame", {
 }, { make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }) })
 
 local navButtons = {
-	{ "🏡 Trädgård", "Garden", C.Green },
-	{ "🌱 Frön", "Seeds", Color3.fromRGB(120, 210, 90) },
-	{ "🧰 Redskap", "Gear", C.Blue },
-	{ "💰 Sälj", "Sell", C.Gold },
+	{ "🏡 Garden", "Garden", C.Green },
+	{ "🌱 Seeds", "Seeds", Color3.fromRGB(120, 210, 90) },
+	{ "🧰 Gear", "Gear", C.Blue },
+	{ "💰 Sell", "Sell", C.Gold },
 }
 for i, info in navButtons do
 	local btn = button({ Name = info[2], LayoutOrder = i, Size = UDim2.new(1, 0, 0, 48), Text = info[1], Parent = nav }, info[3])
@@ -167,7 +167,7 @@ for i, info in navButtons do
 end
 local restockLabel = text({ LayoutOrder = 10, Size = UDim2.new(1, 0, 0, 22), Text = "🚚 --", Parent = nav })
 
--- Ryggsäcksknapp
+-- Backpack button
 local backpackButton = button({
 	Name = "Backpack",
 	AnchorPoint = Vector2.new(1, 0.5),
@@ -177,7 +177,7 @@ local backpackButton = button({
 	Parent = screen,
 }, Color3.fromRGB(200, 140, 80))
 
--- Verktygsfält
+-- Hotbar
 local hotbar = make("Frame", {
 	Name = "Hotbar",
 	AnchorPoint = Vector2.new(0.5, 1),
@@ -195,7 +195,7 @@ local hotbar = make("Frame", {
 	}),
 })
 
--- Notiser
+-- Notifications
 local toasts = make("Frame", {
 	Name = "Toasts",
 	AnchorPoint = Vector2.new(0.5, 1),
@@ -213,7 +213,7 @@ local toasts = make("Frame", {
 })
 
 --------------------------------------------------------------------------------
--- Panelmall (butik / ryggsäck)
+-- Panel template (shop / backpack)
 --------------------------------------------------------------------------------
 
 local function makePanel(name: string, title: string, color: Color3)
@@ -255,11 +255,11 @@ local function makePanel(name: string, title: string, color: Color3)
 	return panel, titleLabel, subtitle, list
 end
 
-local shopPanel, shopTitle, shopSubtitle, shopList = makePanel("Shop", "🌱 Fröbutik", C.Green)
-local packPanel, _, packSubtitle, packList = makePanel("BackpackPanel", "🎒 Ryggsäck", Color3.fromRGB(200, 140, 80))
+local shopPanel, shopTitle, shopSubtitle, shopList = makePanel("Shop", "🌱 Seed Shop", C.Green)
+local packPanel, _, packSubtitle, packList = makePanel("BackpackPanel", "🎒 Backpack", Color3.fromRGB(200, 140, 80))
 
 --------------------------------------------------------------------------------
--- Notiser
+-- Notifications
 --------------------------------------------------------------------------------
 
 local TOAST_COLORS = { info = Color3.fromRGB(70, 70, 90), good = C.Green, bad = C.Red, epic = C.Purple }
@@ -311,7 +311,7 @@ local function toast(message: string, kind: string?)
 end
 
 --------------------------------------------------------------------------------
--- Verktygsfält
+-- Hotbar
 --------------------------------------------------------------------------------
 
 local function setEquipped(id: string?)
@@ -354,7 +354,7 @@ local function renderHotbar()
 	end
 	local order = 0
 	order += 1
-	hotbarSlot(order, "Shovel", "🪏", "Spade", nil, nil)
+	hotbarSlot(order, "Shovel", "🪏", "Shovel", nil, nil)
 	for _, seed in Config.Seeds do
 		local count = state.Seeds[seed.Id]
 		if count and count > 0 then
@@ -388,7 +388,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 --------------------------------------------------------------------------------
--- Butik
+-- Shop
 --------------------------------------------------------------------------------
 
 local function renderShop()
@@ -416,7 +416,7 @@ local function renderShop()
 
 		local detail
 		if isSeeds then
-			detail = string.format("%s • %s • %s", rarity.Name, Config.FormatTime(item.GrowTime), if item.Regrow then "Växer om ♻️" else "En skörd")
+			detail = string.format("%s • %s • %s", rarity.Name, Config.FormatTime(item.GrowTime), if item.Regrow then "Regrows ♻️" else "Single harvest")
 		else
 			detail = item.Description
 		end
@@ -424,7 +424,7 @@ local function renderShop()
 		text({
 			Position = UDim2.fromOffset(70, 50),
 			Size = UDim2.new(1, -200, 0, 16),
-			Text = if inStock > 0 then string.format("x%d i lager", inStock) else "SLUT I LAGER",
+			Text = if inStock > 0 then string.format("x%d in stock", inStock) else "OUT OF STOCK",
 			TextColor3 = if inStock > 0 then Color3.fromRGB(60, 150, 60) else C.Red,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = row,
@@ -449,7 +449,7 @@ local function openShop(kind: string, prompt: ProximityPrompt?)
 	openShopKind = kind
 	openShopPrompt = prompt
 	packPanel.Visible = false
-	shopTitle.Text = if kind == "Seeds" then "🌱 Fröbutik" else "🧰 Redskap"
+	shopTitle.Text = if kind == "Seeds" then "🌱 Seed Shop" else "🧰 Gear Shop"
 	shopPanel.Header.BackgroundColor3 = if kind == "Seeds" then C.Green else C.Blue
 	shopPanel.Visible = true
 	pop(shopPanel)
@@ -477,7 +477,7 @@ Remotes.Shop.OnClientEvent:Connect(function(data)
 end)
 
 --------------------------------------------------------------------------------
--- Ryggsäck
+-- Backpack
 --------------------------------------------------------------------------------
 
 local function renderBackpack()
@@ -488,10 +488,10 @@ local function renderBackpack()
 	if not packPanel.Visible then
 		return
 	end
-	packSubtitle.Text = string.format("Totalt värde: 💰 %s  •  Sälj vid 💰-ståndet!", Config.FormatNumber(state.FruitValue))
+	packSubtitle.Text = string.format("Total value: 💰 %s  •  Sell at the 💰 stall!", Config.FormatNumber(state.FruitValue))
 	clearChildren(packList)
 	if #state.Fruits == 0 then
-		text({ Size = UDim2.new(1, 0, 0, 40), Text = "Tomt! Skörda mogna plantor i din trädgård 🌱", TextColor3 = C.Ink, Parent = packList })
+		text({ Size = UDim2.new(1, 0, 0, 40), Text = "Empty! Harvest ripe plants in your garden 🌱", TextColor3 = C.Ink, Parent = packList })
 		return
 	end
 	for i, group in state.Fruits do
@@ -525,7 +525,7 @@ end
 backpackButton.Activated:Connect(toggleBackpack)
 
 --------------------------------------------------------------------------------
--- Tillstånd från servern
+-- State from the server
 --------------------------------------------------------------------------------
 
 local displayedCoins = 0
@@ -560,7 +560,7 @@ end)
 Remotes.Notify.OnClientEvent:Connect(toast)
 
 --------------------------------------------------------------------------------
--- Väder
+-- Weather
 --------------------------------------------------------------------------------
 
 local camera = workspace.CurrentCamera
@@ -626,7 +626,7 @@ Remotes.Weather.OnClientEvent:Connect(function(id, duration)
 	end
 end)
 
--- Blixtar under åskväder
+-- Lightning during thunderstorms
 task.spawn(function()
 	while true do
 		task.wait(math.random(3, 8))
@@ -638,14 +638,14 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------------------------------
--- Löpande uppdateringar
+-- Continuous updates
 --------------------------------------------------------------------------------
 
 local lastTick = 0
 RunService.Heartbeat:Connect(function()
 	local t = os.clock()
 
-	-- Regnbågsfrukter skiftar färg lokalt.
+	-- Rainbow fruits cycle color locally.
 	for _, fruit in CollectionService:GetTagged("RainbowFruit") do
 		if fruit:IsA("BasePart") then
 			local offset = (fruit.Position.X + fruit.Position.Z) * 0.02
@@ -661,15 +661,15 @@ RunService.Heartbeat:Connect(function()
 	lastTick = t
 
 	local restockText = Config.FormatTime(restockAt - t)
-	restockLabel.Text = "🚚 Påfyllning " .. restockText
+	restockLabel.Text = "🚚 Restock " .. restockText
 	if shopPanel.Visible then
-		shopSubtitle.Text = "🚚 Ny leverans om " .. restockText
+		shopSubtitle.Text = "🚚 New stock in " .. restockText
 	end
 	if weatherBanner.Visible then
 		weatherLabel.Text = string.format("%s • %s", weatherName, Config.FormatTime(weatherEndsAt - t))
 	end
 
-	-- Stäng butiken om spelaren går därifrån.
+	-- Close the shop if the player walks away.
 	if openShopPrompt and openShopPrompt.Parent then
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -680,7 +680,7 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
--- Hämta butikens lager direkt vid start.
+-- Fetch the shop stock right away on start.
 task.spawn(function()
 	local ok, data = pcall(function()
 		return Remotes.GetShop:InvokeServer()

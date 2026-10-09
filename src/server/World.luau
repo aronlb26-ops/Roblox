@@ -1,5 +1,5 @@
--- Bygger hela kartan med kod: mark, stigar, trädgårdstomter, butiksstånd och dekorationer.
--- Det gör att spelet fungerar direkt efter en Rojo-synk utan någon .rbxl-fil.
+-- Builds the whole map in code: ground, paths, garden plots, shop stalls and decorations.
+-- This lets the game work right after a Rojo sync without any .rbxl file.
 
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -92,7 +92,7 @@ local function buildStall(parent: Instance, name: string, title: string, color: 
 			make("Part", { Name = "Post", Size = Vector3.new(0.8, 10, 0.8), CFrame = cf * CFrame.new(x, 5, z), Color = WOOD, Material = Enum.Material.Wood, Parent = model })
 		end
 	end
-	-- Randigt tak
+	-- Striped roof
 	for i = 0, 7 do
 		make("Part", {
 			Name = "Roof",
@@ -105,7 +105,7 @@ local function buildStall(parent: Instance, name: string, title: string, color: 
 	end
 	label(counter, title, Vector2.new(16, 4), Vector3.new(0, 10, 0))
 
-	-- Enkel butiksägare
+	-- Simple shopkeeper
 	local keeper = make("Model", { Name = "Shopkeeper", Parent = model })
 	make("Part", { Name = "Body", Size = Vector3.new(2.5, 3, 1.5), CFrame = cf * CFrame.new(0, 3.5, -1.5), Color = color, Parent = keeper })
 	local head = make("Part", { Name = "Head", Shape = Enum.PartType.Ball, Size = Vector3.new(2.2, 2.2, 2.2), CFrame = cf * CFrame.new(0, 6, -1.5), Color = Color3.fromRGB(255, 220, 180), Parent = keeper })
@@ -114,7 +114,7 @@ local function buildStall(parent: Instance, name: string, title: string, color: 
 	make("Part", { Name = "Hat", Size = Vector3.new(2.6, 0.4, 2.6), CFrame = cf * CFrame.new(0, 7.2, -1.5), Color = Color3.fromRGB(240, 210, 120), Material = Enum.Material.Fabric, Parent = keeper })
 
 	local prompt = make("ProximityPrompt", {
-		ActionText = "Öppna",
+		ActionText = "Open",
 		ObjectText = title,
 		HoldDuration = 0,
 		MaxActivationDistance = 14,
@@ -129,7 +129,7 @@ local function buildPlot(parent: Instance, index: number, cf: CFrame)
 	local model = make("Model", { Name = "Plot" .. index, Parent = parent })
 	make("Part", { Name = "Base", Size = Vector3.new(half * 2, 0.4, half * 2), CFrame = cf * CFrame.new(0, 0.2, 0), Color = Color3.fromRGB(95, 165, 70), Material = Enum.Material.Grass, Parent = model })
 
-	-- Staket med öppning mot stigen (framsidan är -Z i tomtens koordinatsystem).
+	-- Fence with an opening toward the path (front is -Z in plot space).
 	local fenceProps = { Color = Color3.fromRGB(245, 240, 225), Material = Enum.Material.WoodPlanks, Parent = model, Name = "Fence" }
 	local function fence(size: Vector3, offset: Vector3)
 		local props = table.clone(fenceProps)
@@ -145,12 +145,12 @@ local function buildPlot(parent: Instance, index: number, cf: CFrame)
 	fence(Vector3.new(segment, 2.5, 0.5), Vector3.new(-(gap + segment / 2), 1.25, -half))
 	fence(Vector3.new(segment, 2.5, 0.5), Vector3.new(gap + segment / 2, 1.25, -half))
 
-	-- Skylt
+	-- Sign
 	make("Part", { Name = "SignPost", Size = Vector3.new(0.6, 6, 0.6), CFrame = cf * CFrame.new(-gap - 1.5, 3, -half - 1), Color = WOOD, Material = Enum.Material.Wood, Parent = model })
 	local board = make("Part", { Name = "SignBoard", Size = Vector3.new(7, 2.5, 0.4), CFrame = cf * CFrame.new(-gap - 1.5, 6, -half - 1), Color = WOOD, Material = Enum.Material.WoodPlanks, Parent = model })
-	local sign = label(board, "Ledig tomt", Vector2.new(14, 3), Vector3.new(0, 3, 0), Color3.fromRGB(255, 255, 200))
+	local sign = label(board, "Empty Plot", Vector2.new(14, 3), Vector3.new(0, 3, 0), Color3.fromRGB(255, 255, 200))
 
-	-- Odlingsrutor
+	-- Soil tiles
 	local tiles = {}
 	local n = Config.GridSize
 	local count = 0
@@ -209,7 +209,7 @@ function World.Build()
 		Parent = map,
 	})
 
-	-- Tomter: tre på varje sida av stigen, med framsidan mot stigen.
+	-- Plots: three on each side of the path, facing the path.
 	local plotsFolder = make("Folder", { Name = "Plots", Parent = workspace })
 	local plots = {}
 	local xs = { -70, 0, 70 }
@@ -221,20 +221,20 @@ function World.Build()
 		plots[i] = buildPlot(plotsFolder, i, cf)
 	end
 
-	-- Butiksstånd längs stigen
+	-- Shop stalls along the path
 	local stalls = make("Folder", { Name = "Stalls", Parent = map })
 	local facingNorth = function(x: number)
 		local pos = Vector3.new(x, 0, 6)
 		return CFrame.lookAt(pos, pos + Vector3.new(0, 0, -1))
 	end
-	local _, seedPrompt, seedSpot = buildStall(stalls, "SeedShop", "🌱 Fröbutik", Color3.fromRGB(80, 190, 90), facingNorth(-35))
+	local _, seedPrompt, seedSpot = buildStall(stalls, "SeedShop", "🌱 Seed Shop", Color3.fromRGB(80, 190, 90), facingNorth(-35))
 	seedPrompt:SetAttribute("Shop", "Seeds")
-	local _, gearPrompt, gearSpot = buildStall(stalls, "GearShop", "🧰 Redskap", Color3.fromRGB(80, 140, 230), facingNorth(-70))
+	local _, gearPrompt, gearSpot = buildStall(stalls, "GearShop", "🧰 Gear Shop", Color3.fromRGB(80, 140, 230), facingNorth(-70))
 	gearPrompt:SetAttribute("Shop", "Gear")
-	local _, sellPrompt, sellSpot = buildStall(stalls, "SellShop", "💰 Sälj frukt", Color3.fromRGB(240, 170, 40), facingNorth(35))
-	sellPrompt.ActionText = "Sälj allt"
+	local _, sellPrompt, sellSpot = buildStall(stalls, "SellShop", "💰 Sell Fruit", Color3.fromRGB(240, 170, 40), facingNorth(35))
+	sellPrompt.ActionText = "Sell All"
 
-	-- Dekorationer runt kanterna
+	-- Decorations around the edges
 	local deco = make("Folder", { Name = "Decorations", Parent = map })
 	local random = Random.new(1337)
 	for _ = 1, 60 do
